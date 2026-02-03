@@ -1,46 +1,65 @@
- local UserInputService = game:GetService("UserInputService")
+local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 
 local Library = {}
 
 function Library:CreateWindow(hubName)
     local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "AdvancedLibrary"
+    screenGui.Name = "Animated_UI_Library"
     screenGui.Parent = (gethui and gethui()) or game.CoreGui
     screenGui.ResetOnSpawn = false
 
-    -- Biến trạng thái
-    local isFull = false
     local isMinimized = false
+    local mainSize = UDim2.new(0, 500, 0, 300)
 
-    -- 1. NÚT MINI MỞ UI (Hiện khi đóng UI chính)
+    -- 1. NÚT MINI OPEN
     local miniBtn = Instance.new("TextButton")
     miniBtn.Size = UDim2.new(0, 50, 0, 50)
     miniBtn.Position = UDim2.new(0, 20, 0.5, -25)
     miniBtn.BackgroundColor3 = Color3.fromRGB(0, 255, 127)
     miniBtn.Text = "OPEN"
     miniBtn.Font = Enum.Font.GothamBold
-    miniBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+    miniBtn.TextColor3 = Color3.fromRGB(20, 20, 20)
     miniBtn.Visible = false
     miniBtn.Parent = screenGui
     Instance.new("UICorner", miniBtn).CornerRadius = UDim.new(1, 0)
-    Instance.new("UIStroke", miniBtn).Thickness = 2
+    local miniStroke = Instance.new("UIStroke", miniBtn)
+    miniStroke.Thickness = 2
+    miniStroke.Color = Color3.fromRGB(255,255,255)
 
     -- 2. KHUNG CHÍNH (MAIN FRAME)
     local main = Instance.new("Frame")
-    main.Size = UDim2.new(0, 520, 0, 320)
-    main.Position = UDim2.new(0.5, -260, 0.5, -160)
+    main.Name = "MainFrame"
+    main.Size = UDim2.new(0, 0, 0, 0) -- Bắt đầu từ 0 để tạo hiệu ứng phóng to
+    main.Position = UDim2.new(0.5, 0, 0.5, 0)
     main.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
     main.BorderSizePixel = 0
     main.ClipsDescendants = true
+    main.Active = true
+    main.AnchorPoint = Vector2.new(0.5, 0.5) -- Đặt tâm ở giữa để phóng to đều
     main.Parent = screenGui
+    
     Instance.new("UICorner", main).CornerRadius = UDim.new(0, 10)
     local mainStroke = Instance.new("UIStroke", main)
-    mainStroke.Color = Color3.fromRGB(50, 50, 50)
+    mainStroke.Color = Color3.fromRGB(60, 60, 60)
+
+    -- HÀM ANIMATION MỞ UI
+    local function openUI()
+        main.Visible = true
+        main:TweenSizeAndPosition(mainSize, UDim2.new(0.5, 0, 0.5, 0), "Out", "Back", 0.5, true)
+    end
+
+    -- HÀM ANIMATION ĐÓNG UI
+    local function closeUI()
+        main:TweenSizeAndPosition(UDim2.new(0, 0, 0, 0), UDim2.new(0.5, 0, 0.5, 0), "In", "Back", 0.4, true, function()
+            main.Visible = false
+            miniBtn.Visible = true
+        end)
+    end
 
     -- Sidebar
     local sidebar = Instance.new("Frame")
-    sidebar.Size = UDim2.new(0, 140, 1, 0)
+    sidebar.Size = UDim2.new(0, 130, 1, 0)
     sidebar.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     sidebar.BorderSizePixel = 0
     sidebar.Parent = main
@@ -56,10 +75,10 @@ function Library:CreateWindow(hubName)
     title.TextSize = 18
     title.Parent = sidebar
 
-    -- Control Buttons Container (Góc trên bên phải)
+    -- Control Buttons
     local controls = Instance.new("Frame")
-    controls.Size = UDim2.new(0, 100, 0, 30)
-    controls.Position = UDim2.new(1, -105, 0, 5)
+    controls.Size = UDim2.new(0, 70, 0, 30)
+    controls.Position = UDim2.new(1, -75, 0, 5)
     controls.BackgroundTransparency = 1
     controls.Parent = main
 
@@ -69,72 +88,48 @@ function Library:CreateWindow(hubName)
     controlLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
     controlLayout.Padding = UDim.new(0, 5)
 
-    -- --- HÀM TẠO NÚT ĐIỀU KHIỂN ---
-    local function createControlBtn(txt, color, callback)
-        local btn = Instance.new("TextButton")
-        btn.Size = UDim2.new(0, 25, 0, 25)
-        btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-        btn.Text = txt
-        btn.TextColor3 = color
-        btn.Font = Enum.Font.GothamBold
-        btn.TextSize = 14
-        btn.Parent = controls
-        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
-        btn.MouseButton1Click:Connect(callback)
-    end
+    -- Nút Minimize (Ẩn nội dung)
+    local minBtn = Instance.new("TextButton")
+    minBtn.Size = UDim2.new(0, 25, 0, 25)
+    minBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    minBtn.Text = "-"
+    minBtn.TextColor3 = Color3.fromRGB(255, 200, 0)
+    minBtn.Font = Enum.Font.GothamBold
+    minBtn.Parent = controls
+    Instance.new("UICorner", minBtn).CornerRadius = UDim.new(0, 5)
 
-    -- Nút 1: Đóng về Mini
-    createControlBtn("_", Color3.fromRGB(255, 200, 0), function()
-        main.Visible = false
-        miniBtn.Visible = true
-    end)
-
-    -- Nút 2: Mở rộng / Thu nhỏ (Full)
-    createControlBtn("□", Color3.fromRGB(0, 200, 255), function()
-        if not isFull then
-            TweenService:Create(main, TweenInfo.new(0.3), {Size = UDim2.new(0, 700, 0, 450)}):Play()
-        else
-            TweenService:Create(main, TweenInfo.new(0.3), {Size = UDim2.new(0, 520, 0, 320)}):Play()
-        end
-        isFull = not isFull
-    end)
-
-    -- Nút 3: Ẩn một nửa (Minimize Content)
-    createControlBtn("X", Color3.fromRGB(255, 80, 80), function()
+    minBtn.MouseButton1Click:Connect(function()
         if not isMinimized then
-            TweenService:Create(main, TweenInfo.new(0.3), {Size = UDim2.new(0, 140, 0, 320)}):Play()
+            TweenService:Create(main, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {Size = UDim2.new(0, 130, 0, 300)}):Play()
         else
-            TweenService:Create(main, TweenInfo.new(0.3), {Size = UDim2.new(0, 520, 0, 320)}):Play()
+            TweenService:Create(main, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {Size = mainSize}):Play()
         end
         isMinimized = not isMinimized
     end)
 
-    -- Sự kiện mở lại từ Mini
+    -- Nút Close (Đóng về tâm)
+    local closeBtn = Instance.new("TextButton")
+    closeBtn.Size = UDim2.new(0, 25, 0, 25)
+    closeBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    closeBtn.Text = "X"
+    closeBtn.TextColor3 = Color3.fromRGB(255, 80, 80)
+    closeBtn.Font = Enum.Font.GothamBold
+    closeBtn.Parent = controls
+    Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 5)
+
+    closeBtn.MouseButton1Click:Connect(closeUI)
     miniBtn.MouseButton1Click:Connect(function()
-        main.Visible = true
         miniBtn.Visible = false
+        openUI()
     end)
 
-    -- Các phần còn lại (Tab, Page...)
-    local tabButtonsContainer = Instance.new("ScrollingFrame")
-    tabButtonsContainer.Size = UDim2.new(1, 0, 1, -60)
-    tabButtonsContainer.Position = UDim2.new(0, 0, 0, 50)
-    tabButtonsContainer.BackgroundTransparency = 1
-    tabButtonsContainer.ScrollBarThickness = 0
-    tabButtonsContainer.Parent = sidebar
-    Instance.new("UIListLayout", tabButtonsContainer).Padding = UDim.new(0, 5)
-
-    local pagesContainer = Instance.new("Frame")
-    pagesContainer.Size = UDim2.new(1, -150, 1, -40)
-    pagesContainer.Position = UDim2.new(0, 145, 0, 35)
-    pagesContainer.BackgroundTransparency = 1
-    pagesContainer.Parent = main
-
-    -- Dragging
+    -- Logic Dragging (Kéo thả) - Đã fix để hoạt động với AnchorPoint 0.5
     local dragging, dragInput, dragStart, startPos
     main.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true; dragStart = input.Position; startPos = main.Position
+            dragging = true
+            dragStart = input.Position
+            startPos = main.Position
         end
     end)
     UserInputService.InputChanged:Connect(function(input)
@@ -145,20 +140,35 @@ function Library:CreateWindow(hubName)
     end)
     main.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
 
+    -- Tabs Container
+    local pagesContainer = Instance.new("Frame")
+    pagesContainer.Size = UDim2.new(1, -145, 1, -40)
+    pagesContainer.Position = UDim2.new(0, 138, 0, 35)
+    pagesContainer.BackgroundTransparency = 1
+    pagesContainer.Parent = main
+
+    local tabButtonsContainer = Instance.new("ScrollingFrame")
+    tabButtonsContainer.Size = UDim2.new(1, 0, 1, -60)
+    tabButtonsContainer.Position = UDim2.new(0, 0, 0, 50)
+    tabButtonsContainer.BackgroundTransparency = 1
+    tabButtonsContainer.ScrollBarThickness = 0
+    tabButtonsContainer.Parent = sidebar
+    Instance.new("UIListLayout", tabButtonsContainer).Padding = UDim.new(0, 5)
+
     local isFirstTab = true
     function Library:CreateTab(name)
         local page = Instance.new("ScrollingFrame")
         page.Size = UDim2.new(1, 0, 1, 0)
         page.BackgroundTransparency = 1
         page.Visible = false
-        page.ScrollBarThickness = 2
+        page.ScrollBarThickness = 0
         page.AutomaticCanvasSize = Enum.AutomaticSize.Y
         page.Parent = pagesContainer
         Instance.new("UIListLayout", page).Padding = UDim.new(0, 8)
 
         local tabBtn = Instance.new("TextButton")
-        tabBtn.Size = UDim2.new(0, 120, 0, 35)
-        tabBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        tabBtn.Size = UDim2.new(0, 115, 0, 32)
+        tabBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
         tabBtn.Text = name
         tabBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
         tabBtn.Font = Enum.Font.Gotham
@@ -171,12 +181,12 @@ function Library:CreateWindow(hubName)
         end)
 
         if isFirstTab then page.Visible = true; isFirstTab = false end
-
+        
         local elements = {}
         function elements:AddButton(text, callback)
             local btn = Instance.new("TextButton")
             btn.Size = UDim2.new(1, -10, 0, 35)
-            btn.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+            btn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
             btn.Text = "  " .. text
             btn.TextColor3 = Color3.fromRGB(255, 255, 255)
             btn.TextXAlignment = Enum.TextXAlignment.Left
@@ -188,11 +198,12 @@ function Library:CreateWindow(hubName)
         return elements
     end
 
+    -- Khởi tạo mở UI lần đầu
+    openUI()
     return Library
 end
 
--- --- TEST UI ---
-local win = Library:CreateWindow("VENOM HUB")
+-- --- TEST ---
+local win = Library:CreateWindow("PREMIUM UI")
 local t1 = win:CreateTab("Main")
-t1:AddButton("Hello World", function() print("Clicked!") end)
-local t2 = win:CreateTab("Settings")
+t1:AddButton("Hello!", function() print("UI Opened with Smooth Animation") end)
