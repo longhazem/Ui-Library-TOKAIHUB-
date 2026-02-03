@@ -6,16 +6,29 @@ local Library = {}
 
 function Library:CreateWindow()
     local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "TOKAI_RGB_Library"
+    screenGui.Name = "TOKAI_ELAINA_HUB"
     screenGui.Parent = (gethui and gethui()) or game.CoreGui
     screenGui.ResetOnSpawn = false
 
     local mainSize = UDim2.new(0, 520, 0, 320)
+    local logoID = "rbxassetid://114511502145158" -- LOGO ELAINA MỚI CỦA BẠN
+
+    -- NÚT MỞ LẠI UI (MINI BUTTON) - Hiện ra khi đóng UI chính
+    local openBtn = Instance.new("ImageButton", screenGui)
+    openBtn.Size = UDim2.new(0, 55, 0, 55)
+    openBtn.Position = UDim2.new(0, 20, 0.5, -25)
+    openBtn.Visible = false
+    openBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+    openBtn.Image = logoID
+    openBtn.ClipsDescendants = true
+    Instance.new("UICorner", openBtn).CornerRadius = UDim.new(1, 0)
+    local openStroke = Instance.new("UIStroke", openBtn)
+    openStroke.Thickness = 2
 
     -- MAIN FRAME
     local main = Instance.new("Frame")
     main.Name = "MainFrame"
-    main.Size = UDim2.new(0, 0, 0, 0) -- Khởi tạo từ 0 để phóng to
+    main.Size = mainSize
     main.Position = UDim2.new(0.5, 0, 0.5, 0)
     main.BackgroundColor3 = Color3.fromRGB(15, 15, 15)
     main.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -24,35 +37,57 @@ function Library:CreateWindow()
     main.Parent = screenGui
     
     Instance.new("UICorner", main).CornerRadius = UDim.new(0, 12)
-    
-    -- VIỀN LED CHO MAIN
     local mainStroke = Instance.new("UIStroke", main)
     mainStroke.Thickness = 2
-    mainStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+    -- HIỆU ỨNG SAKURA & ĐỐM TÍM (Hợp màu Elaina)
+    local function SpawnSakura(x, y)
+        local colors = {
+            Color3.fromRGB(255, 192, 220), -- Hồng nhạt
+            Color3.fromRGB(200, 180, 255), -- Tím Elaina
+            Color3.fromRGB(255, 255, 255)  -- Trắng
+        }
+        for i = 1, 5 do
+            local p = Instance.new("Frame", main)
+            p.Size = UDim2.new(0, math.random(5, 8), 0, math.random(5, 8))
+            p.Position = UDim2.new(0, x, 0, y)
+            p.BackgroundColor3 = colors[math.random(1, #colors)]
+            p.BorderSizePixel = 0
+            p.ZIndex = 10
+            Instance.new("UICorner", p).CornerRadius = UDim.new(1, 0)
+            
+            local t = TweenService:Create(p, TweenInfo.new(0.7, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                Position = UDim2.new(0, x + math.random(-60, 60), 0, y + math.random(-60, 60)),
+                BackgroundTransparency = 1,
+                Rotation = math.random(-180, 180),
+                Size = UDim2.new(0, 0, 0, 0)
+            })
+            t:Play()
+            t.Completed:Connect(function() p:Destroy() end)
+        end
+    end
 
     -- SIDEBAR
-    local sidebar = Instance.new("Frame")
+    local sidebar = Instance.new("Frame", main)
     sidebar.Size = UDim2.new(0, 150, 1, 0)
     sidebar.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
     sidebar.BorderSizePixel = 0
-    sidebar.Parent = main
     Instance.new("UICorner", sidebar).CornerRadius = UDim.new(0, 12)
 
-    -- LOGO DECAL CỦA BẠN
+    -- LOGO ELAINA TRÊN SIDEBAR
     local logo = Instance.new("ImageLabel", sidebar)
-    logo.Size = UDim2.new(0, 45, 0, 45)
+    logo.Size = UDim2.new(0, 42, 0, 42)
     logo.Position = UDim2.new(0, 12, 0, 12)
     logo.BackgroundTransparency = 1
-    logo.Image = "rbxassetid://73801656700802" -- ID bạn cung cấp
+    logo.Image = logoID
     Instance.new("UICorner", logo).CornerRadius = UDim.new(1, 0)
-    
     local logoStroke = Instance.new("UIStroke", logo)
     logoStroke.Thickness = 2
 
-    -- TÊN LIBRARY: TOKAI
+    -- TÊN LIBRARY
     local title = Instance.new("TextLabel", sidebar)
-    title.Size = UDim2.new(1, -65, 0, 45)
-    title.Position = UDim2.new(0, 65, 0, 12)
+    title.Size = UDim2.new(1, -65, 0, 42)
+    title.Position = UDim2.new(0, 60, 0, 12)
     title.BackgroundTransparency = 1
     title.Text = "TOKAI"
     title.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -60,55 +95,66 @@ function Library:CreateWindow()
     title.TextSize = 20
     title.TextXAlignment = Enum.TextXAlignment.Left
 
-    -- NÚT ĐÓNG (X)
+    -- NÚT ĐÓNG (HIDE UI)
     local closeBtn = Instance.new("TextButton", main)
     closeBtn.Size = UDim2.new(0, 30, 0, 30)
-    closeBtn.Position = UDim2.new(1, -35, 0, 5)
+    closeBtn.Position = UDim2.new(1, -35, 0, 8)
     closeBtn.BackgroundTransparency = 1
     closeBtn.Text = "×"
-    closeBtn.TextColor3 = Color3.fromRGB(200, 200, 200)
+    closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     closeBtn.TextSize = 25
     closeBtn.MouseButton1Click:Connect(function()
-        main:TweenSize(UDim2.new(0, 0, 0, 0), "In", "Back", 0.4, true)
+        main:TweenPosition(UDim2.new(0.5, 0, 1.5, 0), "In", "Back", 0.5, true) -- Trôi xuống dưới mất hút
+        task.wait(0.5)
+        openBtn.Visible = true
     end)
 
-    -- HỆ THỐNG LED RGB
+    openBtn.MouseButton1Click:Connect(function()
+        openBtn.Visible = false
+        main:TweenPosition(UDim2.new(0.5, 0, 0.5, 0), "Out", "Back", 0.5, true)
+    end)
+
+    -- LED RGB SYSTEM (Hệ màu dịu hơn cho hợp Elaina)
     coroutine.wrap(function()
-        local hue = 0
+        local h = 0
         while true do
-            hue = hue + 1/300 
-            if hue > 1 then hue = 0 end
-            local color = Color3.fromHSV(hue, 0.8, 1)
-            mainStroke.Color = color
-            logoStroke.Color = color
+            h = h + 1/400
+            local c = Color3.fromHSV(h%1, 0.6, 1)
+            mainStroke.Color = c
+            logoStroke.Color = c
+            openStroke.Color = c
             RunService.RenderStepped:Wait()
         end
     end)()
 
-    -- LOGIC KÉO THẢ (FIXED)
-    local dragging, dragStart, startPos
+    -- KÉO THẢ & CLICK EFFECT
+    local dragging, dragInput, dragStart, startPos
     main.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            local m = UserInputService:GetMouseLocation()
+            SpawnSakura(m.X - main.AbsolutePosition.X, m.Y - main.AbsolutePosition.Y - 36)
             dragging = true; dragStart = input.Position; startPos = main.Position
+            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
         end
     end)
     UserInputService.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local delta = input.Position - dragStart
+        if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
+    end)
+    RunService.RenderStepped:Connect(function()
+        if dragging and dragInput then
+            local delta = dragInput.Position - dragStart
             main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
         end
     end)
-    main.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
 
-    -- CONTAINER CHO TABS & PAGES
     local pages = Instance.new("Frame", main)
-    pages.Size = UDim2.new(1, -170, 1, -60)
-    pages.Position = UDim2.new(0, 160, 0, 50)
+    pages.Size = UDim2.new(1, -170, 1, -65)
+    pages.Position = UDim2.new(0, 160, 0, 55)
     pages.BackgroundTransparency = 1
 
     local tabList = Instance.new("ScrollingFrame", sidebar)
-    tabList.Size = UDim2.new(1, 0, 1, -70)
-    tabList.Position = UDim2.new(0, 0, 0, 65)
+    tabList.Size = UDim2.new(1, 0, 1, -75)
+    tabList.Position = UDim2.new(0, 0, 0, 70)
     tabList.BackgroundTransparency = 1
     tabList.ScrollBarThickness = 0
     Instance.new("UIListLayout", tabList).HorizontalAlignment = Enum.HorizontalAlignment.Center
@@ -116,60 +162,42 @@ function Library:CreateWindow()
     local first = true
     function Library:CreateTab(name)
         local page = Instance.new("ScrollingFrame", pages)
-        page.Size = UDim2.new(1, 0, 1, 0)
-        page.BackgroundTransparency = 1
-        page.Visible = false
-        page.ScrollBarThickness = 0
+        page.Size = UDim2.new(1, 0, 1, 0); page.BackgroundTransparency = 1
+        page.Visible = false; page.ScrollBarThickness = 0
         Instance.new("UIListLayout", page).Padding = UDim.new(0, 8)
 
         local tabBtn = Instance.new("TextButton", tabList)
         tabBtn.Size = UDim2.new(0, 130, 0, 35)
-        tabBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-        tabBtn.Text = name
-        tabBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
+        tabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+        tabBtn.Text = name; tabBtn.TextColor3 = Color3.fromRGB(150, 150, 150)
         tabBtn.Font = Enum.Font.GothamSemibold
         Instance.new("UICorner", tabBtn)
 
         tabBtn.MouseButton1Click:Connect(function()
-            for _, p in pairs(pages:GetChildren()) do p.Visible = false end
-            for _, t in pairs(tabList:GetChildren()) do if t:IsA("TextButton") then t.TextColor3 = Color3.fromRGB(150, 150, 150) end end
-            page.Visible = true
-            tabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            for _, v in pairs(pages:GetChildren()) do v.Visible = false end
+            for _, v in pairs(tabList:GetChildren()) do if v:IsA("TextButton") then v.TextColor3 = Color3.fromRGB(150, 150, 150) end end
+            page.Visible = true; tabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
         end)
-
         if first then page.Visible = true; tabBtn.TextColor3 = Color3.fromRGB(255, 255, 255); first = false end
 
         local elements = {}
         function elements:AddButton(text, callback)
             local btn = Instance.new("TextButton", page)
             btn.Size = UDim2.new(1, -10, 0, 38)
-            btn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+            btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
             btn.Text = "  " .. text
             btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-            btn.Font = Enum.Font.Gotham
-            btn.TextXAlignment = Enum.TextXAlignment.Left
+            btn.Font = Enum.Font.Gotham; btn.TextXAlignment = Enum.TextXAlignment.Left
             Instance.new("UICorner", btn)
-            
             btn.MouseButton1Click:Connect(callback)
-            
-            -- Hiệu ứng click
-            btn.MouseButton1Down:Connect(function()
-                btn:TweenSize(UDim2.new(1, -20, 0, 34), "Out", "Quad", 0.1, true)
-            end)
-            btn.MouseButton1Up:Connect(function()
-                btn:TweenSize(UDim2.new(1, -10, 0, 38), "Out", "Quad", 0.1, true)
-            end)
         end
         return elements
     end
 
-    -- Mở UI
-    main:TweenSize(mainSize, "Out", "Back", 0.5, true)
     return Library
 end
 
 -- --- SỬ DỤNG ---
 local win = Library:CreateWindow()
 local t1 = win:CreateTab("Main")
-t1:AddButton("Welcome to TOKAI!", function() print("Running...") end)
-local t2 = win:CreateTab("Settings")
+t1:AddButton("Hello Elaina!", function() print("Script is Running...") end)
