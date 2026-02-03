@@ -4,28 +4,52 @@ local RunService = game:GetService("RunService")
 
 local Library = {}
 
+local function MakeDraggable(frame)
+    local dragging, dragInput, dragStart, startPos
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            end)
+        end
+    end)
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    RunService.RenderStepped:Connect(function()
+        if dragging and dragInput then
+            local delta = dragInput.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+end
+
 function Library:CreateWindow()
     local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "TOKAI_FINAL_FIX"
+    screenGui.Name = "TOKAI_CORE"
     screenGui.Parent = (gethui and gethui()) or game.CoreGui
     screenGui.ResetOnSpawn = false
 
     local mainSize = UDim2.new(0, 520, 0, 320)
     local logoID = "rbxassetid://136094224630213"
 
-    -- NÚT MỞ UI (GỌN GÀNG Ở GÓC)
     local openBtn = Instance.new("ImageButton", screenGui)
-    openBtn.Size = UDim2.new(0, 50, 0, 50)
-    openBtn.Position = UDim2.new(0, 10, 0.5, -25)
-    openBtn.Visible = false -- Mặc định ẩn
+    openBtn.Size = UDim2.new(0, 55, 0, 55)
+    openBtn.Position = UDim2.new(0, 20, 0.5, -25)
+    openBtn.Visible = false
     openBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     openBtn.Image = logoID
-    openBtn.BorderSizePixel = 0
+    openBtn.Active = true
     Instance.new("UICorner", openBtn).CornerRadius = UDim.new(1, 0)
     local openStroke = Instance.new("UIStroke", openBtn)
     openStroke.Thickness = 2
+    MakeDraggable(openBtn)
 
-    -- MAIN FRAME
     local main = Instance.new("Frame")
     main.Name = "MainFrame"
     main.Size = mainSize
@@ -34,99 +58,42 @@ function Library:CreateWindow()
     main.AnchorPoint = Vector2.new(0.5, 0.5)
     main.ClipsDescendants = true
     main.Active = true
-    main.Visible = true -- Mặc định hiện
     main.Parent = screenGui
-    
     Instance.new("UICorner", main).CornerRadius = UDim.new(0, 12)
     local mainStroke = Instance.new("UIStroke", main)
     mainStroke.Thickness = 2
+    MakeDraggable(main)
 
-    -- HIỆU ỨNG BẤM RA HOA ANH ĐÀO & ĐỐM TÍM
-    local function SpawnSakura(x, y)
-        local colors = {Color3.fromRGB(255, 192, 210), Color3.fromRGB(210, 180, 255), Color3.fromRGB(255, 255, 255)}
-        for i = 1, 6 do
-            local p = Instance.new("Frame", main)
-            p.Size = UDim2.new(0, math.random(5, 8), 0, math.random(5, 8))
-            p.Position = UDim2.new(0, x, 0, y)
-            p.BackgroundColor3 = colors[math.random(1, #colors)]
-            p.BorderSizePixel = 0
-            p.ZIndex = 15
-            Instance.new("UICorner", p).CornerRadius = UDim.new(1, 0)
-            
-            local t = TweenService:Create(p, TweenInfo.new(0.8, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-                Position = UDim2.new(0, x + math.random(-60, 60), 0, y + math.random(-60, 60)),
-                BackgroundTransparency = 1,
-                Rotation = math.random(-180, 180),
-                Size = UDim2.new(0, 0, 0, 0)
-            })
-            t:Play()
-            t.Completed:Connect(function() p:Destroy() end)
-        end
-    end
-
-    -- NÚT ĐÓNG (FIX TRIỆT ĐỂ LỖI KHÔNG MẤT UI)
     local closeBtn = Instance.new("TextButton", main)
     closeBtn.Size = UDim2.new(0, 30, 0, 30)
-    closeBtn.Position = UDim2.new(1, -35, 0, 5)
+    closeBtn.Position = UDim2.new(1, -35, 0, 8)
     closeBtn.BackgroundTransparency = 1
     closeBtn.Text = "×"
     closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     closeBtn.TextSize = 25
-    closeBtn.ZIndex = 20
+    closeBtn.ZIndex = 100
 
     closeBtn.MouseButton1Click:Connect(function()
-        -- Animation thu nhỏ và ẩn hoàn toàn
-        local tween = TweenService:Create(main, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In), {
-            Size = UDim2.new(0, 0, 0, 0),
-            BackgroundTransparency = 1
-        })
-        tween:Play()
-        tween.Completed:Connect(function()
-            main.Visible = false -- Biến mất hoàn toàn khỏi màn hình
-            openBtn.Visible = true -- Hiện nút mở lại
-        end)
+        local t = TweenService:Create(main, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)})
+        t:Play()
+        t.Completed:Connect(function() main.Visible = false; openBtn.Visible = true end)
     end)
 
     openBtn.MouseButton1Click:Connect(function()
-        openBtn.Visible = false
-        main.Visible = true
+        openBtn.Visible = false; main.Visible = true
         main:TweenSize(mainSize, "Out", "Back", 0.5, true)
-        TweenService:Create(main, TweenInfo.new(0.5), {BackgroundTransparency = 0}):Play()
     end)
 
-    -- LED RGB
     coroutine.wrap(function()
         local h = 0
         while true do
             h = h + 1/350
             local col = Color3.fromHSV(h%1, 0.6, 1)
-            mainStroke.Color = col
-            openStroke.Color = col
+            mainStroke.Color = col; openStroke.Color = col
             RunService.RenderStepped:Wait()
         end
     end)()
 
-    -- KÉO THẢ MƯỢT MÀ
-    local dragging, dragInput, dragStart, startPos
-    main.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            local m = UserInputService:GetMouseLocation()
-            SpawnSakura(m.X - main.AbsolutePosition.X, m.Y - main.AbsolutePosition.Y - 36)
-            dragging = true; dragStart = input.Position; startPos = main.Position
-            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
-        end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
-    end)
-    RunService.RenderStepped:Connect(function()
-        if dragging and dragInput then
-            local delta = dragInput.Position - dragStart
-            main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-
-    -- CÁC PHẦN SIDEBAR VÀ PAGE (GIỮ NGUYÊN)
     local sidebar = Instance.new("Frame", main)
     sidebar.Size = UDim2.new(0, 150, 1, 0)
     sidebar.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
@@ -184,7 +151,4 @@ function Library:CreateWindow()
     return Library
 end
 
--- --- TEST ---
-local win = Library:CreateWindow()
-local t1 = win:CreateTab("Main")
-t1:AddButton("Click Test Effect", function() end)
+return Library
