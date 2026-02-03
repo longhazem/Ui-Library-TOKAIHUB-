@@ -2,6 +2,7 @@ local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 
+-- --- CORE SYSTEM ---
 local Library = {}
 
 local function MakeDraggable(frame)
@@ -31,13 +32,14 @@ end
 
 function Library:CreateWindow()
     local screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "TOKAI_CORE"
+    screenGui.Name = "TOKAI_CORE_FIXED"
     screenGui.Parent = (gethui and gethui()) or game.CoreGui
     screenGui.ResetOnSpawn = false
 
     local mainSize = UDim2.new(0, 520, 0, 320)
     local logoID = "rbxassetid://136094224630213"
 
+    -- NÚT MINI MỞ LẠI UI
     local openBtn = Instance.new("ImageButton", screenGui)
     openBtn.Size = UDim2.new(0, 55, 0, 55)
     openBtn.Position = UDim2.new(0, 20, 0.5, -25)
@@ -45,11 +47,13 @@ function Library:CreateWindow()
     openBtn.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
     openBtn.Image = logoID
     openBtn.Active = true
+    openBtn.ZIndex = 999
     Instance.new("UICorner", openBtn).CornerRadius = UDim.new(1, 0)
     local openStroke = Instance.new("UIStroke", openBtn)
     openStroke.Thickness = 2
     MakeDraggable(openBtn)
 
+    -- MAIN FRAME
     local main = Instance.new("Frame")
     main.Name = "MainFrame"
     main.Size = mainSize
@@ -64,26 +68,33 @@ function Library:CreateWindow()
     mainStroke.Thickness = 2
     MakeDraggable(main)
 
+    -- NÚT ĐÓNG (X)
     local closeBtn = Instance.new("TextButton", main)
     closeBtn.Size = UDim2.new(0, 30, 0, 30)
     closeBtn.Position = UDim2.new(1, -35, 0, 8)
     closeBtn.BackgroundTransparency = 1
     closeBtn.Text = "×"
     closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    closeBtn.TextSize = 25
+    closeBtn.TextSize = 30
     closeBtn.ZIndex = 100
+    closeBtn.Font = Enum.Font.GothamBold
 
     closeBtn.MouseButton1Click:Connect(function()
         local t = TweenService:Create(main, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0)})
         t:Play()
-        t.Completed:Connect(function() main.Visible = false; openBtn.Visible = true end)
+        t.Completed:Connect(function() 
+            main.Visible = false
+            openBtn.Visible = true 
+        end)
     end)
 
     openBtn.MouseButton1Click:Connect(function()
-        openBtn.Visible = false; main.Visible = true
+        openBtn.Visible = false
+        main.Visible = true
         main:TweenSize(mainSize, "Out", "Back", 0.5, true)
     end)
 
+    -- HIỆU ỨNG LED BỀ NGOÀI
     coroutine.wrap(function()
         local h = 0
         while true do
@@ -94,6 +105,7 @@ function Library:CreateWindow()
         end
     end)()
 
+    -- SIDEBAR
     local sidebar = Instance.new("Frame", main)
     sidebar.Size = UDim2.new(0, 150, 1, 0)
     sidebar.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
@@ -110,19 +122,28 @@ function Library:CreateWindow()
     title.BackgroundTransparency = 1; title.Text = "TOKAI"; title.TextColor3 = Color3.fromRGB(255, 255, 255)
     title.Font = Enum.Font.GothamBold; title.TextSize = 20; title.TextXAlignment = Enum.TextXAlignment.Left
 
+    -- NỘI DUNG PAGES
     local pages = Instance.new("Frame", main)
-    pages.Size = UDim2.new(1, -170, 1, -65); pages.Position = UDim2.new(0, 160, 0, 55); pages.BackgroundTransparency = 1
+    pages.Name = "Pages"
+    pages.Size = UDim2.new(1, -170, 1, -65)
+    pages.Position = UDim2.new(0, 160, 0, 55)
+    pages.BackgroundTransparency = 1
 
     local tabList = Instance.new("ScrollingFrame", sidebar)
-    tabList.Size = UDim2.new(1, 0, 1, -75); tabList.Position = UDim2.new(0, 0, 0, 70)
-    tabList.BackgroundTransparency = 1; tabList.ScrollBarThickness = 0
-    Instance.new("UIListLayout", tabList).HorizontalAlignment = Enum.HorizontalAlignment.Center
+    tabList.Size = UDim2.new(1, 0, 1, -75)
+    tabList.Position = UDim2.new(0, 0, 0, 70)
+    tabList.BackgroundTransparency = 1
+    tabList.ScrollBarThickness = 0
+    local layout = Instance.new("UIListLayout", tabList)
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    layout.Padding = UDim.new(0, 5)
 
     local first = true
     function Library:CreateTab(name)
         local page = Instance.new("ScrollingFrame", pages)
         page.Size = UDim2.new(1, 0, 1, 0); page.BackgroundTransparency = 1; page.Visible = false; page.ScrollBarThickness = 0
-        Instance.new("UIListLayout", page).Padding = UDim.new(0, 8)
+        local pageLayout = Instance.new("UIListLayout", page)
+        pageLayout.Padding = UDim.new(0, 8)
 
         local tabBtn = Instance.new("TextButton", tabList)
         tabBtn.Size = UDim2.new(0, 130, 0, 35); tabBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
@@ -130,7 +151,7 @@ function Library:CreateWindow()
         Instance.new("UICorner", tabBtn)
 
         tabBtn.MouseButton1Click:Connect(function()
-            for _, v in pairs(pages:GetChildren()) do v.Visible = false end
+            for _, v in pairs(pages:GetChildren()) do if v:IsA("ScrollingFrame") then v.Visible = false end end
             for _, v in pairs(tabList:GetChildren()) do if v:IsA("TextButton") then v.TextColor3 = Color3.fromRGB(150, 150, 150) end end
             page.Visible = true; tabBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
         end)
@@ -140,15 +161,4 @@ function Library:CreateWindow()
         function elements:AddButton(text, callback)
             local btn = Instance.new("TextButton", page)
             btn.Size = UDim2.new(1, -10, 0, 38); btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-            btn.Text = "  " .. text; btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-            btn.Font = Enum.Font.Gotham; btn.TextXAlignment = Enum.TextXAlignment.Left
-            Instance.new("UICorner", btn)
-            btn.MouseButton1Click:Connect(callback)
-        end
-        return elements
-    end
-
-    return Library
-end
-
-return Library
+            btn.Text = "  " .. text; btn.TextColor3 = Color3.fromRGB(255, 255,
